@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 底层示例内容：横屏适配 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#FFFFFF"
+        android:padding="48dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📖 课堂内容展示区"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginEnd="48dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="拖动聚光灯移动位置\n双指缩放调整大小"
+            android:textSize="20sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:lineSpacingExtra="8dp" />
+
+    </LinearLayout>
+
+    <!-- 聚光灯遮罩层 -->
+    <com.heyboard.teachingassistant.SpotlightView
+        android:id="@+id/spotlightView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 返回按钮浮在最上层 -->
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="24dp"
+        android:background="@drawable/circle_button_bg"
+        android:contentDescription="返回"
+        android:src="@drawable/ic_arrow_back"
+        android:elevation="8dp" />
+
+</FrameLayout>

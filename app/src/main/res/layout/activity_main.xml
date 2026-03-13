@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Heyboard 教学助手"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:layout_marginBottom="40dp"
+        app:layout_constraintBottom_toTopOf="@id/btnRandomCall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 三个按钮水平链，垂直居中 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRandomCall"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginEnd="16dp"
+        android:text="🎲\n随机点名"
+        android:textSize="20sp"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnTimer"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTimer"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="⏱\n课堂计时器"
+        android:textSize="20sp"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="@id/btnRandomCall"
+        app:layout_constraintEnd_toStartOf="@id/btnSpotlight"
+        app:layout_constraintStart_toEndOf="@id/btnRandomCall"
+        app:layout_constraintTop_toTopOf="@id/btnRandomCall" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSpotlight"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="48dp"
+        android:text="🔦\n聚光灯"
+        android:textSize="20sp"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="@id/btnRandomCall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnTimer"
+        app:layout_constraintTop_toTopOf="@id/btnRandomCall" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
