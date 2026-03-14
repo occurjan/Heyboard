@@ -5,64 +5,268 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@drawable/gradient_bg"
     tools:context=".MainActivity">
 
+    <!-- 设置按钮 -->
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/settings"
+        android:src="@drawable/ic_settings"
+        android:alpha="0.6"
+        app:layout_constraintEnd_toStartOf="@id/btnHome"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 返回桌面按钮 -->
+    <ImageButton
+        android:id="@+id/btnHome"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/back_to_desktop"
+        android:src="@drawable/ic_home"
+        android:alpha="0.6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 品牌标题区 -->
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Heyboard 教学助手"
-        android:textSize="32sp"
+        android:text="@string/main_title"
+        android:textSize="36sp"
         android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginBottom="40dp"
-        app:layout_constraintBottom_toTopOf="@id/btnRandomCall"
+        android:textColor="#FFFFFF"
+        android:letterSpacing="0.05"
+        app:layout_constraintBottom_toTopOf="@id/tvSlogan"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
-    <!-- 三个按钮水平链，垂直居中 -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnRandomCall"
+    <TextView
+        android:id="@+id/tvSlogan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/main_slogan"
+        android:textSize="16sp"
+        android:textColor="#90CAF9"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="36dp"
+        android:letterSpacing="0.1"
+        app:layout_constraintBottom_toTopOf="@id/cardRandomCall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+    <!-- 四个功能卡片 -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardRandomCall"
         android:layout_width="0dp"
-        android:layout_height="100dp"
+        android:layout_height="160dp"
         android:layout_marginStart="48dp"
-        android:layout_marginEnd="16dp"
-        android:text="🎲\n随机点名"
-        android:textSize="20sp"
-        app:cornerRadius="20dp"
+        android:layout_marginEnd="12dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnTimer"
+        app:layout_constraintEnd_toStartOf="@id/cardTimer"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/tvSlogan">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnTimer"
-        android:layout_width="0dp"
-        android:layout_height="100dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:text="⏱\n课堂计时器"
-        android:textSize="20sp"
-        app:cornerRadius="20dp"
-        app:layout_constraintBottom_toBottomOf="@id/btnRandomCall"
-        app:layout_constraintEnd_toStartOf="@id/btnSpotlight"
-        app:layout_constraintStart_toEndOf="@id/btnRandomCall"
-        app:layout_constraintTop_toTopOf="@id/btnRandomCall" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSpotlight"
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/card_icon_bg"
+                android:backgroundTint="@color/card_blue"
+                android:padding="12dp"
+                android:src="@drawable/ic_random"
+                app:tint="#FFFFFF"
+                android:contentDescription="@string/random_call" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/random_call"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/random_call_desc"
+                android:textSize="12sp"
+                android:textColor="#999999" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardTimer"
         android:layout_width="0dp"
-        android:layout_height="100dp"
-        android:layout_marginStart="16dp"
+        android:layout_height="160dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp"
+        app:layout_constraintBottom_toBottomOf="@id/cardRandomCall"
+        app:layout_constraintEnd_toStartOf="@id/cardSpotlight"
+        app:layout_constraintStart_toEndOf="@id/cardRandomCall"
+        app:layout_constraintTop_toTopOf="@id/cardRandomCall">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/card_icon_bg"
+                android:backgroundTint="@color/card_green"
+                android:padding="12dp"
+                android:src="@drawable/ic_timer"
+                app:tint="#FFFFFF"
+                android:contentDescription="@string/classroom_timer" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/classroom_timer"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/timer_desc"
+                android:textSize="12sp"
+                android:textColor="#999999" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardSpotlight"
+        android:layout_width="0dp"
+        android:layout_height="160dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp"
+        app:layout_constraintBottom_toBottomOf="@id/cardRandomCall"
+        app:layout_constraintEnd_toStartOf="@id/cardSubtitle"
+        app:layout_constraintStart_toEndOf="@id/cardTimer"
+        app:layout_constraintTop_toTopOf="@id/cardRandomCall">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/card_icon_bg"
+                android:backgroundTint="@color/card_orange"
+                android:padding="12dp"
+                android:src="@drawable/ic_spotlight"
+                app:tint="#FFFFFF"
+                android:contentDescription="@string/spotlight" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/spotlight"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/spotlight_desc"
+                android:textSize="12sp"
+                android:textColor="#999999" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="160dp"
+        android:layout_marginStart="12dp"
         android:layout_marginEnd="48dp"
-        android:text="🔦\n聚光灯"
-        android:textSize="20sp"
-        app:cornerRadius="20dp"
-        app:layout_constraintBottom_toBottomOf="@id/btnRandomCall"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp"
+        app:layout_constraintBottom_toBottomOf="@id/cardRandomCall"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnTimer"
-        app:layout_constraintTop_toTopOf="@id/btnRandomCall" />
+        app:layout_constraintStart_toEndOf="@id/cardSpotlight"
+        app:layout_constraintTop_toTopOf="@id/cardRandomCall">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/card_icon_bg"
+                android:backgroundTint="@color/card_purple"
+                android:padding="12dp"
+                android:src="@drawable/ic_subtitle"
+                app:tint="#FFFFFF"
+                android:contentDescription="@string/live_subtitle" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/live_subtitle"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/subtitle_desc"
+                android:textSize="12sp"
+                android:textColor="#999999" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,81 @@
+<resources>
+    <string name="app_name">Heyboard Assistant</string>
+    <string name="subtitle_channel_name">Live Subtitles</string>
+    <string name="spotlight_channel_name">Spotlight</string>
+
+    <!-- Main -->
+    <string name="main_title">Heyboard Assistant</string>
+    <string name="main_slogan">Making classrooms smarter and more fun</string>
+    <string name="random_call">Random Call</string>
+    <string name="random_call_desc">Pick a random student</string>
+    <string name="classroom_timer">Timer</string>
+    <string name="timer_desc">Activity countdown</string>
+    <string name="spotlight">Spotlight</string>
+    <string name="spotlight_desc">Screen focus tool</string>
+    <string name="live_subtitle">Subtitles</string>
+    <string name="subtitle_desc">Speech-to-text overlay</string>
+    <string name="back_to_desktop">Home</string>
+    <string name="settings">Settings</string>
+
+    <!-- Random Call -->
+    <string name="set_number_range">Set Number Range</string>
+    <string name="number_suffix">#</string>
+    <string name="start_call">Start</string>
+
+    <!-- Timer -->
+    <string name="enter_activity_name">Enter activity name</string>
+    <string name="minutes">min</string>
+    <string name="seconds">sec</string>
+    <string name="start_timer">Start Timer</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="reset">Reset</string>
+
+    <!-- Spotlight -->
+    <string name="spotlight_settings">Spotlight Settings</string>
+    <string name="mask_opacity">Mask Opacity</string>
+    <string name="spotlight_size">Spotlight Size</string>
+    <string name="start_spotlight">Start Spotlight</string>
+    <string name="stop_spotlight">Stop Spotlight</string>
+    <string name="minimize_to_bg">Minimize</string>
+    <string name="grant_overlay_permission">Please grant overlay permission</string>
+    <string name="permission_granted">Permission granted, tap again to start</string>
+
+    <!-- Subtitle -->
+    <string name="subtitle_title">Live Speech-to-Text</string>
+    <string name="subtitle_hint">Subtitles appear as a floating window</string>
+    <string name="current_lang_zh">Language: Chinese</string>
+    <string name="current_lang_en">Language: English</string>
+    <string name="chinese">Chinese</string>
+    <string name="english">English</string>
+    <string name="start_subtitle">Start Subtitles</string>
+    <string name="stop_subtitle">Stop Subtitles</string>
+    <string name="subtitle_started">Subtitles started</string>
+    <string name="permission_required">Permission required for this feature</string>
+    <string name="waiting_voice">Waiting for voice input…</string>
+    <string name="listening">Listening…</string>
+
+    <!-- Subtitle Service -->
+    <string name="subtitle_running">Subtitles Active</string>
+    <string name="subtitle_transcribing">Transcribing speech</string>
+    <string name="stop_subtitle_action">Stop</string>
+    <string name="speech_not_available">Speech recognition unavailable (Google app required)</string>
+    <string name="speech_create_failed">Failed to create speech recognizer</string>
+    <string name="speech_start_failed">Failed to start speech recognition</string>
+    <string name="mic_permission_missing">Microphone permission missing</string>
+    <string name="switched_to">Switched to: %s</string>
+
+    <!-- Spotlight Service -->
+    <string name="spotlight_running">Spotlight Active</string>
+    <string name="spotlight_click_close">Tap to close spotlight</string>
+    <string name="close_spotlight_action">Close</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="version_label">Version</string>
+    <string name="app_name_label">App Name</string>
+    <string name="language_label">Language</string>
+    <string name="lang_zh">中文</string>
+    <string name="lang_en">English</string>
+    <string name="back">Back</string>
+</resources>

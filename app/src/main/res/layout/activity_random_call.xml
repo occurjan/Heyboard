@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:padding="24dp">
+    android:background="@drawable/gradient_bg"
+    android:padding="32dp">
 
     <ImageButton
         android:id="@+id/btnBack"
@@ -21,108 +21,118 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="随机点名"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginStart="8dp"
+        android:textColor="#FFFFFF"
+        android:layout_marginStart="12dp"
         app:layout_constraintBottom_toBottomOf="@id/btnBack"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintTop_toTopOf="@id/btnBack" />
 
-    <!-- 横屏布局：左侧显示结果，右侧显示输入和按钮 -->
+    <!-- 左侧：大号结果 -->
     <TextView
         android:id="@+id/tvResult"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:gravity="center"
         android:text="?"
-        android:textSize="160sp"
+        android:textSize="180sp"
         android:textStyle="bold"
-        android:textColor="#1976D2"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/rightPanel"
+        app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
-    <LinearLayout
-        android:id="@+id/rightPanel"
+    <!-- 右侧：设置卡片 -->
+    <androidx.cardview.widget.CardView
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:gravity="center"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintTop_toBottomOf="@id/btnBack">
 
         <LinearLayout
-            android:id="@+id/inputContainer"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="36dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="学号范围：  "
+                android:text="设置学号范围"
                 android:textSize="20sp"
-                android:textColor="#555555" />
+                android:textStyle="bold"
+                android:textColor="#333333" />
 
-            <EditText
-                android:id="@+id/etMin"
-                android:layout_width="90dp"
-                android:layout_height="52dp"
-                android:background="@drawable/edit_text_bg"
-                android:gravity="center"
-                android:hint="1"
-                android:inputType="number"
-                android:textSize="20sp"
-                android:importantForAutofill="no" />
-
-            <TextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="  ~  "
-                android:textSize="20sp"
-                android:textColor="#555555" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginTop="24dp">
 
-            <EditText
-                android:id="@+id/etMax"
-                android:layout_width="90dp"
-                android:layout_height="52dp"
-                android:background="@drawable/edit_text_bg"
-                android:gravity="center"
-                android:hint="50"
-                android:inputType="number"
-                android:textSize="20sp"
-                android:importantForAutofill="no" />
+                <EditText
+                    android:id="@+id/etMin"
+                    android:layout_width="90dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/edit_text_bg"
+                    android:gravity="center"
+                    android:hint="1"
+                    android:inputType="number"
+                    android:textSize="20sp"
+                    android:importantForAutofill="no" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="  号"
-                android:textSize="20sp"
-                android:textColor="#555555" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  ~  "
+                    android:textSize="22sp"
+                    android:textColor="#555555" />
+
+                <EditText
+                    android:id="@+id/etMax"
+                    android:layout_width="90dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/edit_text_bg"
+                    android:gravity="center"
+                    android:hint="50"
+                    android:inputType="number"
+                    android:textSize="20sp"
+                    android:importantForAutofill="no" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  号"
+                    android:textSize="20sp"
+                    android:textColor="#555555" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStart"
+                android:layout_width="220dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="28dp"
+                android:text="开始点名"
+                android:textSize="18sp"
+                android:backgroundTint="#007AFF"
+                app:cornerRadius="28dp" />
 
         </LinearLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnStart"
-            android:layout_width="220dp"
-            android:layout_height="60dp"
-            android:layout_marginTop="32dp"
-            android:text="开始点名"
-            android:textSize="20sp"
-            app:cornerRadius="30dp" />
-
-    </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.55" />
+        app:layout_constraintGuide_percent="0.5" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

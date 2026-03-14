@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -29,6 +36,26 @@
         <activity
             android:name=".SpotlightActivity"
             android:screenOrientation="landscape" />
+        <activity
+            android:name=".SubtitleActivity"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="landscape" />
+
+        <service
+            android:name=".SpotlightService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="screen_overlay" />
+        </service>
+
+        <service
+            android:name=".SubtitleService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
     </application>
 
 </manifest>

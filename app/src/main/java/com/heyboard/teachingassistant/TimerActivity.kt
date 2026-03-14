@@ -1,6 +1,5 @@
 package com.heyboard.teachingassistant
 
-import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -12,11 +11,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import com.google.android.material.button.MaterialButton
 
 class TimerActivity : AppCompatActivity() {
 
-    private lateinit var setupContainer: LinearLayout
+    private lateinit var setupContainer: CardView
     private lateinit var countdownContainer: LinearLayout
     private lateinit var etActivityName: EditText
     private lateinit var etMinutes: EditText
@@ -91,7 +91,7 @@ class TimerActivity : AppCompatActivity() {
             override fun onFinish() {
                 remainingMillis = 0
                 updateDisplay(0)
-                tvCountdown.setTextColor(0xFFE53935.toInt())
+                tvCountdown.setTextColor(0xFFFF5252.toInt())
                 tvCountdown.text = "00:00"
                 playAlarm()
             }
@@ -99,25 +99,22 @@ class TimerActivity : AppCompatActivity() {
     }
 
     private fun updateDisplay(millis: Long) {
-        val totalSeconds = (millis + 999) / 1000 // 向上取整
+        val totalSeconds = (millis + 999) / 1000
         val min = totalSeconds / 60
         val sec = totalSeconds % 60
         tvCountdown.text = String.format("%02d:%02d", min, sec)
 
-        // 最后10秒变红
         if (totalSeconds <= 10) {
-            tvCountdown.setTextColor(0xFFE53935.toInt())
+            tvCountdown.setTextColor(0xFFFF5252.toInt())
         } else {
-            tvCountdown.setTextColor(0xFF1976D2.toInt())
+            tvCountdown.setTextColor(0xFFFFFFFF.toInt())
         }
     }
 
     private fun togglePause() {
         if (isPaused) {
-            // 恢复
             beginCountdown(remainingMillis)
         } else {
-            // 暂停
             countDownTimer?.cancel()
             isPaused = true
             btnPause.text = "继续"
@@ -128,7 +125,7 @@ class TimerActivity : AppCompatActivity() {
         countDownTimer?.cancel()
         countdownContainer.visibility = View.GONE
         setupContainer.visibility = View.VISIBLE
-        tvCountdown.setTextColor(0xFF1976D2.toInt())
+        tvCountdown.setTextColor(0xFFFFFFFF.toInt())
     }
 
     private fun playAlarm() {
@@ -136,9 +133,7 @@ class TimerActivity : AppCompatActivity() {
             val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             val ringtone = RingtoneManager.getRingtone(this, uri)
             ringtone.play()
-        } catch (_: Exception) {
-            // 忽略播放失败
-        }
+        } catch (_: Exception) { }
     }
 
     override fun onDestroy() {

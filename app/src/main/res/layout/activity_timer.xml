@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:padding="24dp">
+    android:background="@drawable/gradient_bg"
+    android:padding="32dp">
 
     <ImageButton
         android:id="@+id/btnBack"
@@ -21,37 +21,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="课堂计时器"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginStart="8dp"
+        android:textColor="#FFFFFF"
+        android:layout_marginStart="12dp"
         app:layout_constraintBottom_toBottomOf="@id/btnBack"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintTop_toTopOf="@id/btnBack" />
 
-    <!-- 设置区域：横屏居中布局 -->
-    <LinearLayout
+    <!-- 设置区域 -->
+    <androidx.cardview.widget.CardView
         android:id="@+id/setupContainer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:gravity="center"
-        android:orientation="horizontal"
+        android:layout_width="520dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack">
 
-        <!-- 左侧：输入区 -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="vertical"
-            android:layout_marginEnd="48dp">
+            android:padding="40dp">
 
             <EditText
                 android:id="@+id/etActivityName"
-                android:layout_width="300dp"
+                android:layout_width="320dp"
                 android:layout_height="56dp"
                 android:background="@drawable/edit_text_bg"
                 android:gravity="center"
@@ -105,20 +104,20 @@
 
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartTimer"
+                android:layout_width="240dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="32dp"
+                android:text="开始计时"
+                android:textSize="18sp"
+                android:backgroundTint="#007AFF"
+                app:cornerRadius="28dp" />
+
         </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-        <!-- 右侧：开始按钮 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnStartTimer"
-            android:layout_width="220dp"
-            android:layout_height="64dp"
-            android:text="开始计时"
-            android:textSize="20sp"
-            app:cornerRadius="32dp" />
-
-    </LinearLayout>
-
-    <!-- 倒计时区域：横屏大字居中 -->
+    <!-- 倒计时区域 -->
     <LinearLayout
         android:id="@+id/countdownContainer"
         android:layout_width="0dp"
@@ -131,7 +130,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack">
 
-        <!-- 左侧：活动名称和倒计时 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -143,8 +141,8 @@
                 android:id="@+id/tvActivityName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"
-                android:textColor="#555555"
+                android:textSize="28sp"
+                android:textColor="#90CAF9"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -152,14 +150,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="05:00"
-                android:textSize="140sp"
+                android:textSize="160sp"
                 android:textStyle="bold"
-                android:textColor="#1976D2"
+                android:textColor="#FFFFFF"
                 android:fontFamily="monospace" />
 
         </LinearLayout>
 
-        <!-- 右侧：控制按钮 -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -170,19 +167,23 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPause"
                 android:layout_width="160dp"
-                android:layout_height="60dp"
+                android:layout_height="56dp"
                 android:text="暂停"
-                android:textSize="20sp"
-                app:cornerRadius="30dp" />
+                android:textSize="18sp"
+                android:backgroundTint="#007AFF"
+                app:cornerRadius="28dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnReset"
                 android:layout_width="160dp"
-                android:layout_height="60dp"
+                android:layout_height="56dp"
                 android:layout_marginTop="16dp"
                 android:text="重置"
-                android:textSize="20sp"
-                app:cornerRadius="30dp"
+                android:textSize="18sp"
+                android:textColor="#FFFFFF"
+                app:cornerRadius="28dp"
+                app:strokeColor="#80FFFFFF"
+                app:strokeWidth="2dp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
         </LinearLayout>

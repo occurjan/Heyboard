@@ -1,3 +1,81 @@
 <resources>
     <string name="app_name">Heyboard教学助手</string>
+    <string name="subtitle_channel_name">实时字幕</string>
+    <string name="spotlight_channel_name">聚光灯</string>
+
+    <!-- 主界面 -->
+    <string name="main_title">Heyboard 教学助手</string>
+    <string name="main_slogan">让课堂更高效、更有趣</string>
+    <string name="random_call">随机点名</string>
+    <string name="random_call_desc">课堂随机抽人</string>
+    <string name="classroom_timer">课堂计时器</string>
+    <string name="timer_desc">活动倒计时</string>
+    <string name="spotlight">聚光灯</string>
+    <string name="spotlight_desc">屏幕聚焦工具</string>
+    <string name="live_subtitle">实时字幕</string>
+    <string name="subtitle_desc">语音转写悬浮窗</string>
+    <string name="back_to_desktop">返回桌面</string>
+    <string name="settings">设置</string>
+
+    <!-- 随机点名 -->
+    <string name="set_number_range">设置学号范围</string>
+    <string name="number_suffix">号</string>
+    <string name="start_call">开始点名</string>
+
+    <!-- 计时器 -->
+    <string name="enter_activity_name">输入活动名称</string>
+    <string name="minutes">分</string>
+    <string name="seconds">秒</string>
+    <string name="start_timer">开始计时</string>
+    <string name="pause">暂停</string>
+    <string name="resume">继续</string>
+    <string name="reset">重置</string>
+
+    <!-- 聚光灯 -->
+    <string name="spotlight_settings">聚光灯设置</string>
+    <string name="mask_opacity">蒙版不透明度</string>
+    <string name="spotlight_size">聚光灯大小</string>
+    <string name="start_spotlight">开启聚光灯</string>
+    <string name="stop_spotlight">关闭聚光灯</string>
+    <string name="minimize_to_bg">最小化到后台</string>
+    <string name="grant_overlay_permission">请授予悬浮窗权限</string>
+    <string name="permission_granted">权限已授予，请再次点击开始</string>
+
+    <!-- 实时字幕 -->
+    <string name="subtitle_title">语音实时转写字幕</string>
+    <string name="subtitle_hint">开启后将以悬浮窗形式显示实时字幕</string>
+    <string name="current_lang_zh">当前语言：中文普通话</string>
+    <string name="current_lang_en">当前语言：English</string>
+    <string name="chinese">中文</string>
+    <string name="english">English</string>
+    <string name="start_subtitle">开启实时字幕</string>
+    <string name="stop_subtitle">关闭实时字幕</string>
+    <string name="subtitle_started">实时字幕已开启</string>
+    <string name="permission_required">需要相关权限才能使用此功能</string>
+    <string name="waiting_voice">等待语音输入…</string>
+    <string name="listening">正在聆听…</string>
+
+    <!-- 字幕服务 -->
+    <string name="subtitle_running">实时字幕运行中</string>
+    <string name="subtitle_transcribing">正在进行语音转写</string>
+    <string name="stop_subtitle_action">停止字幕</string>
+    <string name="speech_not_available">语音识别不可用（需要 Google 应用）</string>
+    <string name="speech_create_failed">语音识别创建失败</string>
+    <string name="speech_start_failed">语音识别启动失败</string>
+    <string name="mic_permission_missing">缺少麦克风权限</string>
+    <string name="switched_to">已切换到: %s</string>
+
+    <!-- 聚光灯服务 -->
+    <string name="spotlight_running">聚光灯运行中</string>
+    <string name="spotlight_click_close">点击关闭聚光灯</string>
+    <string name="close_spotlight_action">关闭聚光灯</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">设置</string>
+    <string name="version_label">版本号</string>
+    <string name="app_name_label">应用名称</string>
+    <string name="language_label">语言</string>
+    <string name="lang_zh">中文</string>
+    <string name="lang_en">English</string>
+    <string name="back">返回</string>
 </resources>

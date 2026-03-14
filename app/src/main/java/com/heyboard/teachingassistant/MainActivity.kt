@@ -4,9 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.button.MaterialButton
+import android.widget.ImageButton
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,14 +20,28 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        findViewById<MaterialButton>(R.id.btnRandomCall).setOnClickListener {
+        findViewById<ImageButton>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        findViewById<ImageButton>(R.id.btnHome).setOnClickListener {
+            val intent = Intent(Intent.ACTION_MAIN)
+            intent.addCategory(Intent.CATEGORY_HOME)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+        }
+
+        findViewById<CardView>(R.id.cardRandomCall).setOnClickListener {
             startActivity(Intent(this, RandomCallActivity::class.java))
         }
-        findViewById<MaterialButton>(R.id.btnTimer).setOnClickListener {
+        findViewById<CardView>(R.id.cardTimer).setOnClickListener {
             startActivity(Intent(this, TimerActivity::class.java))
         }
-        findViewById<MaterialButton>(R.id.btnSpotlight).setOnClickListener {
+        findViewById<CardView>(R.id.cardSpotlight).setOnClickListener {
             startActivity(Intent(this, SpotlightActivity::class.java))
+        }
+        findViewById<CardView>(R.id.cardSubtitle).setOnClickListener {
+            startActivity(Intent(this, SubtitleActivity::class.java))
         }
     }
 }
