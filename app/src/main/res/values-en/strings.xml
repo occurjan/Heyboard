@@ -5,7 +5,7 @@
 
     <!-- Main -->
     <string name="main_title">Heyboard Assistant</string>
-    <string name="main_slogan">Making classrooms smarter and more fun</string>
+    <string name="main_slogan">Make Knowledge Transfer Easier</string>
     <string name="random_call">Random Call</string>
     <string name="random_call_desc">Pick a random student</string>
     <string name="classroom_timer">Timer</string>
@@ -62,6 +62,8 @@
     <string name="speech_not_available">Speech recognition unavailable (Google app required)</string>
     <string name="speech_create_failed">Failed to create speech recognizer</string>
     <string name="speech_start_failed">Failed to start speech recognition</string>
+    <string name="loading_model">Loading speech model…</string>
+    <string name="model_load_failed">Failed to load speech model</string>
     <string name="mic_permission_missing">Microphone permission missing</string>
     <string name="switched_to">Switched to: %s</string>
 

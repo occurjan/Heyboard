@@ -7,13 +7,9 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
-import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -21,10 +17,16 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import org.json.JSONObject
+import org.vosk.Model
+import org.vosk.Recognizer
+import org.vosk.android.RecognitionListener
+import org.vosk.android.SpeechService
 
-class SubtitleService : Service() {
+class SubtitleService : Service(), RecognitionListener {
 
     companion object {
         const val CHANNEL_ID = "subtitle_channel"
@@ -38,11 +40,14 @@ class SubtitleService : Service() {
 
     private var windowManager: WindowManager? = null
     private var floatingView: View? = null
-    private var speechRecognizer: SpeechRecognizer? = null
     private var currentLanguage = "zh-CN"
     private val handler = Handler(Looper.getMainLooper())
     private var tvSubtitle: TextView? = null
     private var isDestroyed = false
+
+    private var model: Model? = null
+    private var speechService: SpeechService? = null
+    private var popupWindow: android.widget.PopupWindow? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -60,7 +65,6 @@ class SubtitleService : Service() {
 
         currentLanguage = intent?.getStringExtra("language") ?: "zh-CN"
 
-        // 必须最先调用 startForeground，否则 Android 会在 5 秒内杀死服务
         showNotification()
 
         try {
@@ -71,14 +75,87 @@ class SubtitleService : Service() {
             return START_NOT_STICKY
         }
 
-        try {
-            startListening()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start speech recognizer", e)
-            tvSubtitle?.text = "语音识别启动失败"
-        }
+        // Initialize Vosk in background thread
+        Thread {
+            initVosk()
+        }.start()
 
         return START_NOT_STICKY
+    }
+
+    private fun initVosk() {
+        try {
+            val modelManager = VoskModelManager(this)
+            handler.post { tvSubtitle?.text = getString(R.string.loading_model) }
+
+            model = modelManager.loadModel(currentLanguage)
+            if (model == null) {
+                handler.post { tvSubtitle?.text = getString(R.string.model_load_failed) }
+                return
+            }
+
+            val rec = Recognizer(model, 16000.0f)
+            speechService = SpeechService(rec, 16000.0f)
+            speechService?.startListening(this)
+
+            handler.post { tvSubtitle?.text = getString(R.string.listening) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to init Vosk", e)
+            handler.post { tvSubtitle?.text = getString(R.string.speech_start_failed) }
+        }
+    }
+
+    // RecognitionListener callbacks
+    override fun onPartialResult(hypothesis: String?) {
+        if (isDestroyed || hypothesis == null) return
+        val text = parseVoskResult(hypothesis, partial = true)
+        if (text.isNotEmpty()) {
+            handler.post { tvSubtitle?.text = text }
+        }
+    }
+
+    override fun onResult(hypothesis: String?) {
+        if (isDestroyed || hypothesis == null) return
+        val text = parseVoskResult(hypothesis, partial = false)
+        if (text.isNotEmpty()) {
+            handler.post { tvSubtitle?.text = text }
+        }
+    }
+
+    override fun onFinalResult(hypothesis: String?) {
+        if (isDestroyed || hypothesis == null) return
+        val text = parseVoskResult(hypothesis, partial = false)
+        if (text.isNotEmpty()) {
+            handler.post { tvSubtitle?.text = text }
+        }
+    }
+
+    override fun onError(exception: Exception?) {
+        Log.e(TAG, "Vosk error", exception)
+        if (!isDestroyed) {
+            handler.post {
+                tvSubtitle?.text = getString(R.string.speech_start_failed)
+            }
+        }
+    }
+
+    override fun onTimeout() {
+        if (!isDestroyed) {
+            handler.post { tvSubtitle?.text = getString(R.string.listening) }
+        }
+    }
+
+    private fun parseVoskResult(json: String, partial: Boolean): String {
+        return try {
+            val obj = JSONObject(json)
+            if (partial) {
+                obj.optString("partial", "")
+            } else {
+                obj.optString("text", "")
+            }
+        } catch (e: Exception) {
+            ""
+        }
     }
 
     private fun showFloatingWindow() {
@@ -107,23 +184,126 @@ class SubtitleService : Service() {
             y = 80
         }
 
-        // 语言切换
-        floatingView?.findViewById<ImageButton>(R.id.btnLanguage)?.setOnClickListener {
-            currentLanguage = if (currentLanguage == "zh-CN") "en-US" else "zh-CN"
-            val langName = if (currentLanguage == "zh-CN") "中文" else "English"
-            tvSubtitle?.text = "已切换到: $langName"
-            restartListening()
+        // Language switch - show popup menu
+        floatingView?.findViewById<ImageButton>(R.id.btnLanguage)?.setOnClickListener { btn ->
+            showLanguagePopup(btn)
         }
 
-        // 关闭按钮
+        // Close button
         floatingView?.findViewById<ImageButton>(R.id.btnCloseSubtitle)?.setOnClickListener {
             stopSelf()
         }
 
-        // 拖动支持
+        // Drag support
         setupDrag(floatingView!!, params)
 
         windowManager?.addView(floatingView, params)
+    }
+
+    private fun showLanguagePopup(anchor: View) {
+        val dp = resources.displayMetrics.density
+
+        val langPopup = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.lang_popup_bg)
+            setPadding((12 * dp).toInt(), (10 * dp).toInt(), (12 * dp).toInt(), (10 * dp).toInt())
+        }
+
+        val languages = arrayOf(
+            "\uD83C\uDDE8\uD83C\uDDF3  中文普通话" to "zh-CN",
+            "\uD83C\uDDFA\uD83C\uDDF8  English" to "en-US"
+        )
+
+        for ((index, pair) in languages.withIndex()) {
+            val (label, code) = pair
+            val isSelected = code == currentLanguage
+
+            val itemLayout = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.lang_item_ripple)
+                setPadding((16 * dp).toInt(), (14 * dp).toInt(), (16 * dp).toInt(), (14 * dp).toInt())
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    popupWindow?.dismiss()
+                    popupWindow = null
+                    if (code != currentLanguage) {
+                        switchToLanguage(code, label.substringAfter("  "))
+                    }
+                }
+            }
+
+            val tv = TextView(this).apply {
+                text = label
+                textSize = 15f
+                setTextColor(if (isSelected) 0xFF007AFF.toInt() else 0xFF333333.toInt())
+                typeface = if (isSelected) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            itemLayout.addView(tv)
+
+            if (isSelected) {
+                val check = TextView(this).apply {
+                    text = "✓"
+                    textSize = 16f
+                    setTextColor(0xFF007AFF.toInt())
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    setPadding((8 * dp).toInt(), 0, 0, 0)
+                }
+                itemLayout.addView(check)
+            }
+
+            langPopup.addView(itemLayout)
+
+            if (index < languages.size - 1) {
+                val divider = View(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1
+                    ).apply {
+                        setMargins((12 * dp).toInt(), (2 * dp).toInt(), (12 * dp).toInt(), (2 * dp).toInt())
+                    }
+                    setBackgroundColor(0x15000000)
+                }
+                langPopup.addView(divider)
+            }
+        }
+
+        val popupWidth = (220 * dp).toInt()
+        langPopup.measure(
+            View.MeasureSpec.makeMeasureSpec(popupWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupHeight = langPopup.measuredHeight
+
+        popupWindow = android.widget.PopupWindow(
+            langPopup,
+            popupWidth,
+            popupHeight,
+            true
+        ).apply {
+            elevation = 24f
+            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(0))
+            isOutsideTouchable = true
+            showAsDropDown(anchor, anchor.width - popupWidth, -(popupHeight + anchor.height + (4 * dp).toInt()))
+        }
+    }
+
+    private fun switchToLanguage(code: String, label: String) {
+        currentLanguage = code
+        tvSubtitle?.text = getString(R.string.switched_to, label)
+
+        try {
+            speechService?.stop()
+            speechService?.shutdown()
+        } catch (_: Exception) {}
+
+        Thread {
+            try {
+                model?.close()
+            } catch (_: Exception) {}
+            initVosk()
+        }.start()
     }
 
     private fun setupDrag(view: View, params: WindowManager.LayoutParams) {
@@ -133,8 +313,7 @@ class SubtitleService : Service() {
         var initialY = 0
         var isDragging = false
 
-        val dragArea = view.findViewById<TextView>(R.id.tvSubtitle)
-        dragArea.setOnTouchListener { _, event ->
+        view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     lastX = event.rawX
@@ -147,7 +326,7 @@ class SubtitleService : Service() {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - lastX
                     val dy = event.rawY - lastY
-                    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true
+                    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) isDragging = true
                     if (isDragging) {
                         params.x = initialX + dx.toInt()
                         params.y = initialY - dy.toInt()
@@ -157,128 +336,17 @@ class SubtitleService : Service() {
                     }
                     true
                 }
+                MotionEvent.ACTION_UP -> {
+                    if (!isDragging) {
+                        // Not a drag, pass click to child views
+                        false
+                    } else {
+                        true
+                    }
+                }
                 else -> false
             }
         }
-    }
-
-    private fun startListening() {
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Log.w(TAG, "SpeechRecognizer not available on this device")
-            tvSubtitle?.text = "语音识别不可用（需要 Google 应用）"
-            return
-        }
-
-        try {
-            speechRecognizer?.destroy()
-        } catch (_: Exception) {}
-
-        try {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to create SpeechRecognizer", e)
-            tvSubtitle?.text = "语音识别创建失败"
-            return
-        }
-
-        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {
-                if (!isDestroyed) {
-                    tvSubtitle?.text = "正在聆听..."
-                }
-            }
-
-            override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(rmsdB: Float) {}
-            override fun onBufferReceived(buffer: ByteArray?) {}
-
-            override fun onEndOfSpeech() {}
-
-            override fun onError(error: Int) {
-                if (isDestroyed) return
-                Log.w(TAG, "SpeechRecognizer error: $error")
-
-                // 所有可恢复错误都重试
-                when (error) {
-                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
-                        tvSubtitle?.text = "缺少麦克风权限"
-                    }
-                    SpeechRecognizer.ERROR_NO_MATCH,
-                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
-                        // 没听到内容，直接重启
-                        scheduleRestart(200)
-                    }
-                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
-                        // 识别器忙，稍等再试
-                        scheduleRestart(1000)
-                    }
-                    else -> {
-                        // 网络错误、客户端错误等，延迟重试
-                        scheduleRestart(800)
-                    }
-                }
-            }
-
-            override fun onResults(results: Bundle?) {
-                if (isDestroyed) return
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-                    tvSubtitle?.text = matches[0]
-                }
-                scheduleRestart(200)
-            }
-
-            override fun onPartialResults(partialResults: Bundle?) {
-                if (isDestroyed) return
-                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-                    tvSubtitle?.text = matches[0]
-                }
-            }
-
-            override fun onEvent(eventType: Int, params: Bundle?) {}
-        })
-
-        performListening()
-    }
-
-    private fun scheduleRestart(delayMs: Long) {
-        handler.removeCallbacksAndMessages(null)
-        handler.postDelayed({
-            if (!isDestroyed) {
-                performListening()
-            }
-        }, delayMs)
-    }
-
-    private fun performListening() {
-        if (isDestroyed) return
-
-        val recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, currentLanguage)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-        }
-        try {
-            speechRecognizer?.startListening(recognizerIntent)
-        } catch (e: Exception) {
-            Log.e(TAG, "startListening failed", e)
-            // 尝试重建识别器
-            if (!isDestroyed) {
-                handler.postDelayed({
-                    if (!isDestroyed) startListening()
-                }, 2000)
-            }
-        }
-    }
-
-    private fun restartListening() {
-        handler.removeCallbacksAndMessages(null)
-        try {
-            speechRecognizer?.cancel()
-        } catch (_: Exception) {}
-        performListening()
     }
 
     private fun showNotification() {
@@ -291,10 +359,11 @@ class SubtitleService : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("实时字幕运行中")
-            .setContentText("正在进行语音转写")
+            .setContentTitle(getString(R.string.subtitle_running))
+            .setContentText(getString(R.string.subtitle_transcribing))
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "停止字幕", stopPending)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.stop_subtitle_action), stopPending)
             .setOngoing(true)
             .build()
 
@@ -318,10 +387,17 @@ class SubtitleService : Service() {
         sendBroadcast(Intent(ACTION_STATE_CHANGED).setPackage(packageName))
         isDestroyed = true
         handler.removeCallbacksAndMessages(null)
+        try { popupWindow?.dismiss() } catch (_: Exception) {}
+        popupWindow = null
         try {
-            speechRecognizer?.destroy()
+            speechService?.stop()
+            speechService?.shutdown()
         } catch (_: Exception) {}
-        speechRecognizer = null
+        speechService = null
+        try {
+            model?.close()
+        } catch (_: Exception) {}
+        model = null
         try {
             floatingView?.let { windowManager?.removeView(it) }
         } catch (_: Exception) {}

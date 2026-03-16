@@ -72,10 +72,7 @@ class SpotlightActivity : AppCompatActivity() {
         }
 
         btnMinimize.setOnClickListener {
-            val home = Intent(Intent.ACTION_MAIN)
-            home.addCategory(Intent.CATEGORY_HOME)
-            home.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(home)
+            finishAffinity()
         }
 
         updateButtonState()

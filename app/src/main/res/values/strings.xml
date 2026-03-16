@@ -62,6 +62,8 @@
     <string name="speech_not_available">语音识别不可用（需要 Google 应用）</string>
     <string name="speech_create_failed">语音识别创建失败</string>
     <string name="speech_start_failed">语音识别启动失败</string>
+    <string name="loading_model">正在加载语音模型…</string>
+    <string name="model_load_failed">语音模型加载失败</string>
     <string name="mic_permission_missing">缺少麦克风权限</string>
     <string name="switched_to">已切换到: %s</string>
 

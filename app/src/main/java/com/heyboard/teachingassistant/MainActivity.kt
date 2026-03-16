@@ -25,10 +25,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<ImageButton>(R.id.btnHome).setOnClickListener {
-            val intent = Intent(Intent.ACTION_MAIN)
-            intent.addCategory(Intent.CATEGORY_HOME)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            finishAffinity()
         }
 
         findViewById<CardView>(R.id.cardRandomCall).setOnClickListener {
@@ -44,4 +41,5 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SubtitleActivity::class.java))
         }
     }
+
 }
