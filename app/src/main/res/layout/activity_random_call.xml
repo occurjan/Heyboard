@@ -20,7 +20,7 @@
         android:id="@+id/tvPageTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="随机点名"
+        android:text="@string/random_call"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
@@ -65,7 +65,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="设置学号范围"
+                android:text="@string/set_number_range"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#333333" />
@@ -109,7 +109,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="  号"
+                    android:text="@string/number_suffix"
                     android:textSize="20sp"
                     android:textColor="#555555" />
 
@@ -120,7 +120,7 @@
                 android:layout_width="220dp"
                 android:layout_height="56dp"
                 android:layout_marginTop="28dp"
-                android:text="开始点名"
+                android:text="@string/start_call"
                 android:textSize="18sp"
                 android:backgroundTint="#007AFF"
                 app:cornerRadius="28dp" />

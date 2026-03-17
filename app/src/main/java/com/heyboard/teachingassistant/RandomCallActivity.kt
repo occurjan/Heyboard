@@ -43,7 +43,7 @@ class RandomCallActivity : AppCompatActivity() {
         val max = maxStr.toIntOrNull()
 
         if (min == null || max == null || min > max) {
-            Toast.makeText(this, "请输入有效的学号范围", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.invalid_range, Toast.LENGTH_SHORT).show()
             return
         }
 

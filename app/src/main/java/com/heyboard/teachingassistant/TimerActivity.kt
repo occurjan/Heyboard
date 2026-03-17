@@ -62,14 +62,14 @@ class TimerActivity : AppCompatActivity() {
         val seconds = secStr.toIntOrNull() ?: 0
 
         if (minutes == 0 && seconds == 0) {
-            Toast.makeText(this, "请设置计时时长", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.set_timer_duration, Toast.LENGTH_SHORT).show()
             return
         }
 
         totalMillis = (minutes * 60L + seconds) * 1000L
         remainingMillis = totalMillis
 
-        val activityName = etActivityName.text.toString().ifEmpty { "课堂活动" }
+        val activityName = etActivityName.text.toString().ifEmpty { getString(R.string.default_activity_name) }
         tvActivityName.text = activityName
 
         setupContainer.visibility = View.GONE
@@ -80,7 +80,7 @@ class TimerActivity : AppCompatActivity() {
 
     private fun beginCountdown(millis: Long) {
         isPaused = false
-        btnPause.text = "暂停"
+        btnPause.text = getString(R.string.pause)
 
         countDownTimer = object : CountDownTimer(millis, 50) {
             override fun onTick(millisUntilFinished: Long) {
@@ -117,7 +117,7 @@ class TimerActivity : AppCompatActivity() {
         } else {
             countDownTimer?.cancel()
             isPaused = true
-            btnPause.text = "继续"
+            btnPause.text = getString(R.string.resume)
         }
     }
 
