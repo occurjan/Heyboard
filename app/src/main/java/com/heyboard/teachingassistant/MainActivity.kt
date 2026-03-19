@@ -1,6 +1,7 @@
 package com.heyboard.teachingassistant
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -9,11 +10,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.widget.ImageButton
 import com.heyboard.teachingassistant.automation.AutomationActivity
-import com.heyboard.teachingassistant.automation.AutomationExecutor
+import com.heyboard.teachingassistant.automation.HeyboardToolService
 
 class MainActivity : AppCompatActivity() {
-    private var hasExecutedOnClose = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -33,15 +32,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<ImageButton>(R.id.btnHome).setOnClickListener {
-            if (!hasExecutedOnClose) {
-                hasExecutedOnClose = true
-                AutomationExecutor.executeOnClose(this)
-            }
             finishAffinity()
         }
 
-        // Execute automation actions on start
-        AutomationExecutor.executeOnStart(this)
+        // Ensure HeyboardToolService is running (no automation triggered)
+        val serviceIntent = Intent(this, HeyboardToolService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
 
         findViewById<CardView>(R.id.cardRandomCall).setOnClickListener {
             startActivity(Intent(this, RandomCallActivity::class.java))
@@ -57,11 +57,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        if (!hasExecutedOnClose) {
-            hasExecutedOnClose = true
-            AutomationExecutor.executeOnClose(this)
-        }
-        super.onDestroy()
-    }
 }

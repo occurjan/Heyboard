@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
@@ -28,6 +29,12 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/usb_device_filter" />
         </activity>
         <activity
             android:name=".RandomCallActivity"
@@ -53,6 +60,32 @@
         <activity
             android:name=".automation.ActionDetailActivity"
             android:screenOrientation="landscape" />
+
+        <receiver
+            android:name=".automation.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".automation.FinishClassReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.h3c.action.FINISH_CLASS" />
+                <action android:name="com.h3c.action.FINISH_CLASS_DONE" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".automation.HeyboardToolService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="automation_tool" />
+        </service>
 
         <service
             android:name=".SpotlightService"

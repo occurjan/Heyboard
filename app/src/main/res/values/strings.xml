@@ -135,4 +135,9 @@
     <string name="no_scenarios">暂无自动化场景</string>
     <string name="serial_send_success">发送成功</string>
     <string name="serial_send_failed">发送失败</string>
+
+    <!-- Heyboard Tool 服务 -->
+    <string name="tool_service_channel_name">Heyboard Tool服务</string>
+    <string name="tool_service_running">自动化服务运行中</string>
+    <string name="tool_service_description">后台自动化任务服务</string>
 </resources>

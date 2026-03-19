@@ -135,4 +135,9 @@
     <string name="no_scenarios">No automation scenarios</string>
     <string name="serial_send_success">Sent successfully</string>
     <string name="serial_send_failed">Send failed</string>
+
+    <!-- Heyboard Tool Service -->
+    <string name="tool_service_channel_name">Heyboard Tool Service</string>
+    <string name="tool_service_running">Automation service running</string>
+    <string name="tool_service_description">Background automation task service</string>
 </resources>
