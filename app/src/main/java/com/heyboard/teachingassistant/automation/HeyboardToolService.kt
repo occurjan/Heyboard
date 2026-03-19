@@ -22,6 +22,7 @@ class HeyboardToolService : Service() {
         private const val TAG = "HeyboardToolService"
         const val ACTION_BOOT_COMPLETED = "com.heyboard.teachingassistant.ACTION_BOOT_COMPLETED"
         const val ACTION_FINISH_CLASS = "com.heyboard.teachingassistant.ACTION_FINISH_CLASS"
+        const val ACTION_RELOAD_CONFIG = "com.heyboard.teachingassistant.ACTION_RELOAD_CONFIG"
         private const val CHANNEL_ID = "heyboard_tool_service"
         private const val NOTIFICATION_ID = 3
     }

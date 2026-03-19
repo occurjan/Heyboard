@@ -9,7 +9,7 @@ object AutomationRepository {
     private const val KEY_SCENARIOS = "scenarios"
 
     fun getScenarios(context: Context): MutableList<AutomationScenario> {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS)
         val json = prefs.getString(KEY_SCENARIOS, null) ?: return mutableListOf()
         return try {
             val arr = JSONArray(json)
@@ -26,7 +26,7 @@ object AutomationRepository {
     fun saveScenarios(context: Context, scenarios: List<AutomationScenario>) {
         val arr = JSONArray()
         scenarios.forEach { arr.put(it.toJson()) }
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS)
             .edit()
             .putString(KEY_SCENARIOS, arr.toString())
             .apply()

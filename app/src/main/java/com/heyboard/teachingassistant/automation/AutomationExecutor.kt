@@ -19,7 +19,7 @@ object AutomationExecutor {
      */
     fun executeOnStart(context: Context) {
         val bootTime = System.currentTimeMillis() - SystemClock.elapsedRealtime()
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_MULTI_PROCESS)
         val lastBootTime = prefs.getLong(KEY_LAST_BOOT_TIME, 0L)
 
         // Allow 5s tolerance for boot time comparison
