@@ -14,18 +14,18 @@ android {
         applicationId = "com.heyboard.teachingassistant"
         minSdk = 24
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.7"
+        versionCode = 8
+        versionName = "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file("../heyboard-release.jks")
-            storePassword = "heyboard123"
-            keyAlias = "heyboard"
-            keyPassword = "heyboard123"
+            storeFile = file("../sign/platform.keystore")
+            storePassword = "platform123"
+            keyAlias = "platform"
+            keyPassword = "platform123"
         }
     }
 

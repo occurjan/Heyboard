@@ -110,9 +110,9 @@ object SerialCommandExecutor {
         val permissionIntent = PendingIntent.getBroadcast(context, 0, explicitIntent, flags)
         usbManager.requestPermission(device, permissionIntent)
 
-        // Wait up to 30 seconds for user to grant permission
+        // Wait up to 120 seconds for user to grant permission
         try {
-            latch.await(30, TimeUnit.SECONDS)
+            latch.await(120, TimeUnit.SECONDS)
         } catch (_: InterruptedException) {}
 
         if (!granted.get()) {

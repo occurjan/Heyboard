@@ -34,8 +34,19 @@ object AutomationExecutor {
         if (scenarios.isEmpty()) return
         Log.i(TAG, "First launch after boot, executing ${scenarios.size} on_start scenarios")
         Thread {
-            for (scenario in scenarios) {
-                executeScenario(context, scenario)
+            // Retry up to 3 times with delay, USB serial driver may not be ready immediately after boot
+            for (attempt in 1..3) {
+                Log.i(TAG, "on_start attempt $attempt/3")
+                var allSuccess = true
+                for (scenario in scenarios) {
+                    val success = executeScenario(context, scenario)
+                    if (!success) allSuccess = false
+                }
+                if (allSuccess) break
+                if (attempt < 3) {
+                    Log.i(TAG, "Retrying in 5 seconds...")
+                    Thread.sleep(5000)
+                }
             }
         }.start()
     }
@@ -72,13 +83,16 @@ object AutomationExecutor {
         return SerialCommandExecutor.execute(context, action)
     }
 
-    private fun executeScenario(context: Context, scenario: AutomationScenario) {
+    private fun executeScenario(context: Context, scenario: AutomationScenario): Boolean {
         Log.i(TAG, "Executing scenario: ${scenario.name}")
+        var allSuccess = true
         for (action in scenario.actions) {
             val result = SerialCommandExecutor.execute(context, action)
             if (result.isFailure) {
                 Log.e(TAG, "Action '${action.name}' failed: ${result.exceptionOrNull()?.message}")
+                allSuccess = false
             }
         }
+        return allSuccess
     }
 }
