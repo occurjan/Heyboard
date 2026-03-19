@@ -5,7 +5,7 @@
 面向教育场景的 Android 教学辅助工具，运行在横屏 16:9 平板上（主要目标设备：H3C MegaBook）。
 
 - **包名**: `com.heyboard.teachingassistant`
-- **当前版本**: 1.0.6 (versionCode=6)
+- **当前版本**: 1.0.8 (versionCode=8)
 - **编译环境**: AGP 9.1.0, compileSdk 36, minSdk 24, targetSdk 36, Java 11
 - **GitHub**: https://github.com/occurjan/Heyboard
 
@@ -30,6 +30,7 @@
 ```
 app/src/main/
 ├── java/com/heyboard/teachingassistant/
+│   ├── HeyboardApp.kt                # Application 类，persistent 进程启动时自动启动 HeyboardToolService
 │   ├── MainActivity.kt              # 主页，四宫格入口，启动 HeyboardToolService
 │   ├── RandomCallActivity.kt        # 随机点名
 │   ├── TimerActivity.kt             # 计时器
@@ -42,12 +43,12 @@ app/src/main/
 │   ├── SettingsActivity.kt          # 设置页（版本、语言）
 │   └── automation/
 │       ├── AutomationModels.kt      # 数据模型（SerialConfig, ScenarioAction, AutomationScenario）
-│       ├── AutomationRepository.kt  # SharedPreferences 持久化
+│       ├── AutomationRepository.kt  # SharedPreferences 持久化（MODE_MULTI_PROCESS 跨进程同步）
 │       ├── AutomationExecutor.kt    # 触发执行器（on_start / on_close 场景执行）
-│       ├── SerialCommandExecutor.kt # USB 串口通信（CH340 等）
-│       ├── HeyboardToolService.kt   # 前台服务：开机执行 on_start、接收一键下课执行 on_close
+│       ├── SerialCommandExecutor.kt # USB 串口通信（CH340 等），含同步权限请求
+│       ├── HeyboardToolService.kt   # 前台服务（:tool 独立进程）：开机执行 on_start、动态注册接收一键下课执行 on_close、维护 H3C 白名单
 │       ├── BootReceiver.kt          # 开机广播接收器 → 启动 HeyboardToolService
-│       ├── FinishClassReceiver.kt   # H3C 一键下课广播接收器 → 启动 HeyboardToolService
+│       ├── FinishClassReceiver.kt   # H3C 一键下课广播接收器（静态注册，Android 14 不生效，仅保留兼容）
 │       ├── AutomationActivity.kt    # 场景列表页
 │       ├── ScenarioDetailActivity.kt # 场景详情页
 │       └── ActionDetailActivity.kt  # 动作配置页（串口参数 + 测试）
@@ -90,56 +91,77 @@ app/src/main/
 
 ### 5. 自动化 / RS232 串口控制
 - **串口库**: `com.github.mik3y:usb-serial-for-android:3.8.1`（JitPack）
-- **USB 权限**: 通过 `usb_device_filter.xml` 声明 CH340/CP2102/FTDI/PL2303，实现自动授权
+- **USB 权限**: 系统平台签名 (sharedUserId=android.uid.system) 自动授权，无需弹窗
 - **数据帧格式**: `AA BB CC [主命令] [子命令] [数据] [校验和] DD EE FF`（10 字节）
 - **串口参数默认值**: 9600 baud, 8 data bits, 1 stop bit, No parity, No flow control
 
-#### 自动化触发机制（HeyboardToolService 架构）
+#### 自动化触发机制（完整业务流程）
 
+**系统启动时 (on_start):**
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   HeyboardToolService                    │
-│              (前台服务, START_STICKY 保活)                 │
-│                                                          │
-│  ACTION_BOOT_COMPLETED → executeOnStart (仅开机后1次)     │
-│  ACTION_FINISH_CLASS   → executeOnClose (每次一键下课)     │
-└────────────────────────┬────────────────┬────────────────┘
-                         │                │
-              ┌──────────┘                └──────────┐
-              │                                      │
-    ┌─────────┴──────────┐              ┌────────────┴───────────┐
-    │    BootReceiver     │              │  FinishClassReceiver   │
-    │  (Manifest 静态注册) │              │  (Manifest 静态注册)    │
-    │                     │              │                        │
-    │ BOOT_COMPLETED      │              │ com.h3c.action.        │
-    │ → startForeground   │              │ FINISH_CLASS_DONE      │
-    │   Service           │              │ → startForeground      │
-    └─────────────────────┘              │   Service              │
-                                         └────────────────────────┘
+设备开机
+  → Android 发送 BOOT_COMPLETED 广播
+  → BootReceiver (静态注册) 接收广播
+  → 启动 HeyboardToolService (独立 :tool 进程)
+  → HeyboardApp.onCreate() 也会启动 Service (persistent 进程自动拉起)
+  → HeyboardToolService.onStartCommand() 收到 ACTION_BOOT_COMPLETED
+  → AutomationExecutor.executeOnStart()
+  → 从 SharedPreferences 读取 trigger="on_start" 的场景
+  → SerialCommandExecutor 发送串口指令 (最多重试3次，间隔5秒)
 ```
 
-| 触发条件 | 实际触发方式 | 接收组件 | 保障机制 |
-|---------|------------|---------|---------|
-| 系统开启时 (`on_start`) | 系统开机完成广播 `BOOT_COMPLETED` | BootReceiver → HeyboardToolService | boot-time guard 防止重复执行（同一次开机仅执行1次） |
-| 系统关闭时 (`on_close`) | H3C 一键下课广播 `com.h3c.action.FINISH_CLASS_DONE` | FinishClassReceiver → HeyboardToolService | Manifest 静态注册，APP 关闭也能接收 |
+**系统关闭时 (on_close / 一键下课):**
+```
+用户点击一键下课
+  → H3C launcher 发送隐式广播 com.h3c.action.FINISH_CLASS
+  → HeyboardToolService 中动态注册的 BroadcastReceiver 接收广播
+  → AutomationExecutor.executeOnClose()
+  → 从 SharedPreferences 读取 trigger="on_close" 的场景
+  → SerialCommandExecutor 发送串口指令
+```
 
-- **boot-time guard**: `AutomationExecutor.executeOnStart()` 通过 `SystemClock.elapsedRealtime()` 计算开机时间戳，与上次记录比较（5秒容差），确保每次开机仅执行一次
-- **H3C 一键下课广播**: 从 H3C Launcher APK (`/system/priv-app/h3clauncher/h3clauncher.apk`) 反编译发现的 Action 字符串：
-  - `com.h3c.action.FINISH_CLASS` — 下课触发
-  - `com.h3c.action.FINISH_CLASS_DONE` — 下课完成（当前使用此 Action）
-  - 广播从 `com.h3c.system.control.BaseControlCompat.notifyFinishClassActionDone()` 发出，运行在 system_server 进程
-- **MainActivity**: 仅负责启动 HeyboardToolService（不传 action，不触发任何自动化），确保用户手动打开 APP 时服务就绪
+#### 关键保障机制
+
+| 机制 | 作用 |
+|------|------|
+| `android:sharedUserId="android.uid.system"` + 平台签名 | 系统级权限，USB 免授权弹窗 |
+| `android:persistent="true"` | 进程常驻，开机自动拉起 |
+| `android:process=":tool"` | Service 独立进程，与 Activity 生命周期解耦 |
+| H3C `service.json` 白名单 | 防止一键下课/一键清理杀掉服务，防止 stopped=true |
+| 动态注册 FinishClassReceiver | Android 14 静态注册收不到隐式广播，改为在 Service 中动态注册 |
+| `MODE_MULTI_PROCESS` | Activity (主进程) 和 Service (:tool 进程) 间 SharedPreferences 数据同步 |
+| 开机时间戳守卫 | on_start 每次开机只执行一次（5秒容差） |
+| `AtomicBoolean` | 防止 on_close 重复执行 |
+| 串口重试机制 | on_start 最多重试3次，间隔5秒，应对 USB 驱动初始化延迟 |
+
+#### H3C 系统白名单配置
+
+白名单文件位于 `/data/h3c/h3cconfig/{最高版本号}/`，由 `HeyboardToolService.ensureH3CWhitelist()` 在服务启动时自动维护：
+
+- **`service.json`**: 添加 `com.heyboard.teachingassistant/.automation.HeyboardToolService`，防止 `forceStopPackage` 杀掉服务
+- **`startApp.json`**: 不需要添加包名（该文件用于 launcher 拉起 Activity 前台界面，我们通过 persistent + BOOT_COMPLETED 实现纯后台自启动）
+
+#### H3C 一键下课广播
+- 从 H3C Launcher APK (`/system/priv-app/h3clauncher/h3clauncher.apk`) 反编译发现的 Action：
+  - `com.h3c.action.FINISH_CLASS` — 下课触发（在 forceStopPackage 之前发送）
+  - `com.h3c.action.FINISH_CLASS_DONE` — 下课完成（在 forceStopPackage 之后发送）
+- 广播从 `com.h3c.system.control.BaseControlCompat.notifyFinishClassActionDone()` 发出
+- 新版 h3clauncher 已将我们的包名加入白名单，forceStopPackage 会跳过
 
 #### RS232 接线方案
 - **MegaBook(USB) → CH340 直通线 → 串口分配器 → 交叉线 → 交互平板 RS232 口**
 - MegaBook 到分配器：**直通线**（分配器输入端为 DCE，DTE↔DCE 引脚互补）
 - 分配器到交互平板：**交叉线**（分配器为信号复制器，输出端等同 DTE，平板也是 DTE，需交叉 TX/RX）
-- 原理：分配器将输入信号原样复制到输出端相同引脚，不做 TX/RX 转换，所以输出端行为等同 DTE
-- 两台 DTE 设备直连必须用交叉线（Null Modem），TX/RX 互换
-- CH340 USB 转 DB9 线出厂默认为直通线
 - 被控设备：CVTE mtk9679 交互智能平板（H3C），RS232 协议规范见桌面文档
 
-### 6. 主题与 UI
+### 6. 系统平台签名
+
+- **签名文件**: `sign/platform.keystore`（从 H3C 系统团队提供的 `platform.pk8` + `platform.x509.pem` 转换）
+- **密码**: `platform123`，别名: `platform`
+- **作用**: 使 APP 以 system UID (1000) 运行，获得系统级权限
+- **效果**: USB 设备权限自动授权（无弹窗）、可读写 `/data/h3c/` 系统配置文件、persistent 标记生效
+
+### 7. 主题与 UI
 - **主色调**: macOS Finder 蓝（#007AFF / #1565C0 / #0B3D91）
 - **渐变背景**: #0B3D91 → #1565C0
 - **MaterialButton**: 必须用 `backgroundTintList` 而非 `setBackgroundColor()`
@@ -158,10 +180,16 @@ app/src/main/
 | `moveTaskToBack()` 后重开不回主页 | 恢复到上次页面 | `finishAffinity()` 关闭所有 Activity |
 | 悬浮窗拖动时灵时不灵 | 拖动只绑定在 TextView 上 | 改为整个 floatingView 监听触摸 |
 | Debug/Release APK 安装冲突 | 签名不一致 | 统一用 release 签名测试 |
-| Android 14+ 广播不可达 | 隐式广播限制 | `setPackage(packageName)` + `RECEIVER_NOT_EXPORTED` |
+| Android 14+ 隐式广播不可达 | 静态注册的 BroadcastReceiver 收不到隐式广播 | 改为在 Service 中动态注册 receiver |
 | USB 权限 PendingIntent 崩溃 | Android 14 禁止隐式 Intent + FLAG_MUTABLE | 改为显式 Intent（setPackage）+ FLAG_MUTABLE |
 | Toast 在 H3C 设备不显示 | H3C 系统屏蔽 Toast 通知 | 改用 AlertDialog 显示结果 |
 | 串口指令发出但设备无反应 | USB 转 DB9 直通线 TX/RX 未交叉 | DTE↔DTE 需使用交叉线（Null Modem） |
+| USB 权限弹窗每次开机都出现 | 普通签名无法持久化 USB 权限 | 使用系统平台签名，USB 权限自动授权 |
+| 开机后 UsbSerialProber 返回 0 个驱动 | 系统 UID 下 USB 驱动初始化有延迟 | 重试机制（3次，间隔5秒） |
+| 一键下课杀掉 Service | forceStopPackage 杀掉整个包的所有进程 | H3C 白名单 (service.json) + 独立 :tool 进程 |
+| 一键下课后 stopped=true 导致开机无法自启动 | forceStopPackage 设置 FLAG_STOPPED | H3C 白名单豁免 forceStopPackage |
+| 开机时前台界面被自动打开 | USB_DEVICE_ATTACHED intent-filter 自动拉起 MainActivity | 移除该 intent-filter |
+| Activity 修改配置后 Service 读不到新数据 | SharedPreferences 跨进程不同步 | 改为 MODE_MULTI_PROCESS |
 
 ---
 
@@ -169,26 +197,29 @@ app/src/main/
 
 - 每次打包版本号 +0.0.1（十进制，如 1.0.9 → 1.0.10）
 - versionCode 同步递增
-- APK 文件名格式: `Heyboard-v{版本号}-{YYYY-MM-DD}.apk`
+- APK 文件名格式: `Heyboard_v{版本号}_{YYYYMMDD}.apk`
 - 版本号体现在 build.gradle.kts 和设置页面
 
 ---
 
 ## 签名配置
 
-- Keystore: `../heyboard-release.jks`
-- Alias: `heyboard`
-- 签名密码: `heyboard123`
+- **Keystore**: `sign/platform.keystore`（系统平台签名）
+- **Alias**: `platform`
+- **密码**: `platform123`
+- **来源**: H3C 系统团队提供的 `platform.pk8` + `platform.x509.pem` 转换而来
 
 ---
 
 ## 开发环境
 
 - macOS, Android Studio
-- 主控设备: H3C MegaBook (Android 14, 3840x2160, 无 Google 框架, IP: 10.214.75.17)
+- 主控设备: H3C MegaBook (Android 14, SDK 34, 3840x2160, 无 Google 框架, IP: 10.214.75.17)
 - 被控设备: H3C/CVTE mtk9679 交互智能平板 (IP: 10.214.75.35)
+- 系统版本: `OPS2HEYBOARDD012P01` (H3C/caas/caas:14/UQ1A.231205.015)
 - adb 无线连接: `adb connect <ip>:5555`
-- 屏幕投射: `scrcpy -s <ip>:5555`
+- 屏幕投射: `ADB=/Users/Admin/Library/Android/sdk/platform-tools/adb scrcpy`
+- adb 路径: `/Users/Admin/Library/Android/sdk/platform-tools/adb`
 
 ### 硬件连接拓扑
 ```
@@ -207,6 +238,7 @@ MegaBook(USB) → CH340直通线 → 串口分配器(1入4出) → 交叉线×4 
 | 1.0.5 | 2026-03-17 | 新增自动化功能（RS232 串口控制） |
 | 1.0.6 | 2026-03-17 | 修复 USB 权限崩溃、Toast 不显示；自动化图标改为扳手 |
 | 1.0.7 | 2026-03-18 | 自动化触发重构：HeyboardToolService 前台服务 + 开机自启动 + H3C 一键下课广播触发 |
+| 1.0.8 | 2026-03-19 | 系统平台签名（USB 免授权）、persistent 进程常驻、:tool 独立进程、H3C 白名单集成、动态注册 FinishClassReceiver、跨进程 SharedPreferences 同步 |
 
 ---
 
@@ -222,4 +254,3 @@ MegaBook(USB) → CH340直通线 → 串口分配器(1入4出) → 交叉线×4 
 - [ ] 适配更多无 Google 框架的国产设备
 - [ ] 自动化：预设常用串口命令（开关机、切换输入源等）
 - [ ] 自动化：串口指令执行延时设置（多条指令间隔）
-- [ ] 验证 FinishClassReceiver 在 APP 被杀后能否正常接收广播（若不行需 H3C 系统源码配合）
