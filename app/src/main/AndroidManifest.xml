@@ -66,16 +66,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name=".automation.FinishClassReceiver"
-            android:process=":tool"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.h3c.action.FINISH_CLASS" />
-                <action android:name="com.h3c.action.FINISH_CLASS_DONE" />
-            </intent-filter>
-        </receiver>
-
         <service
             android:name=".automation.HeyboardToolService"
             android:process=":tool"

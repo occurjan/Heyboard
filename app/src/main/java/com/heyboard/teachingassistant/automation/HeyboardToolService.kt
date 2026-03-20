@@ -21,20 +21,18 @@ class HeyboardToolService : Service() {
     companion object {
         private const val TAG = "HeyboardToolService"
         const val ACTION_BOOT_COMPLETED = "com.heyboard.teachingassistant.ACTION_BOOT_COMPLETED"
-        const val ACTION_FINISH_CLASS = "com.heyboard.teachingassistant.ACTION_FINISH_CLASS"
-        const val ACTION_RELOAD_CONFIG = "com.heyboard.teachingassistant.ACTION_RELOAD_CONFIG"
         private const val CHANNEL_ID = "heyboard_tool_service"
         private const val NOTIFICATION_ID = 3
     }
 
-    private var finishClassReceiver: BroadcastReceiver? = null
+    private var shutdownReceiver: BroadcastReceiver? = null
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification())
         Log.i(TAG, "Service created")
-        registerFinishClassReceiver()
+        registerShutdownReceiver()
         ensureH3CWhitelist()
     }
 
@@ -44,39 +42,48 @@ class HeyboardToolService : Service() {
                 Log.i(TAG, "Boot completed trigger received")
                 AutomationExecutor.executeOnStart(this)
             }
-            ACTION_FINISH_CLASS -> {
-                Log.i(TAG, "Finish class trigger received")
-                AutomationExecutor.executeOnClose(this)
-            }
         }
         return START_STICKY
     }
 
     override fun onDestroy() {
         Log.i(TAG, "Service destroyed")
-        finishClassReceiver?.let {
+        shutdownReceiver?.let {
             try { unregisterReceiver(it) } catch (_: Exception) {}
         }
         super.onDestroy()
     }
 
-    private fun registerFinishClassReceiver() {
-        finishClassReceiver = object : BroadcastReceiver() {
+    private fun getSystemProperty(key: String): String {
+        return try {
+            val clazz = Class.forName("android.os.SystemProperties")
+            val method = clazz.getMethod("get", String::class.java, String::class.java)
+            method.invoke(null, key, "") as String
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    private fun registerShutdownReceiver() {
+        shutdownReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                Log.i(TAG, "Finish class broadcast received: ${intent.action}")
+                Log.i(TAG, "Shutdown broadcast received: ${intent.action}")
+                // 通过 sys.shutdown.requested 区分关机和重启
+                val shutdownReason = getSystemProperty("sys.shutdown.requested")
+                Log.i(TAG, "sys.shutdown.requested: '$shutdownReason'")
+                // "0" = shutdown, "1" = reboot, "reboot,xxx" = reboot variant
+                val isReboot = shutdownReason == "1" || shutdownReason.contains("reboot", ignoreCase = true)
+                if (isReboot) {
+                    Log.i(TAG, "This is a REBOOT, skipping on_close scenarios")
+                    return
+                }
+                Log.i(TAG, "This is a SHUTDOWN, executing on_close scenarios")
                 AutomationExecutor.executeOnClose(context.applicationContext)
             }
         }
-        val filter = IntentFilter().apply {
-            addAction("com.h3c.action.FINISH_CLASS")
-            addAction("com.h3c.action.FINISH_CLASS_DONE")
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(finishClassReceiver, filter, Context.RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(finishClassReceiver, filter)
-        }
-        Log.i(TAG, "Registered dynamic FinishClassReceiver")
+        val filter = IntentFilter(Intent.ACTION_SHUTDOWN)
+        registerReceiver(shutdownReceiver, filter)
+        Log.i(TAG, "Registered dynamic ShutdownReceiver")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

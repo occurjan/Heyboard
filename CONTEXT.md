@@ -5,7 +5,7 @@
 面向教育场景的 Android 教学辅助工具，运行在横屏 16:9 平板上（主要目标设备：H3C MegaBook）。
 
 - **包名**: `com.heyboard.teachingassistant`
-- **当前版本**: 1.0.8 (versionCode=8)
+- **当前版本**: 1.0.9 (versionCode=9)
 - **编译环境**: AGP 9.1.0, compileSdk 36, minSdk 24, targetSdk 36, Java 11
 - **GitHub**: https://github.com/occurjan/Heyboard
 
@@ -110,11 +110,14 @@ app/src/main/
   → SerialCommandExecutor 发送串口指令 (最多重试3次，间隔5秒)
 ```
 
-**系统关闭时 (on_close / 一键下课):**
+**系统关闭时 (on_close):**
 ```
-用户点击一键下课
-  → H3C launcher 发送隐式广播 com.h3c.action.FINISH_CLASS
-  → HeyboardToolService 中动态注册的 BroadcastReceiver 接收广播
+用户点击关机
+  → Android 发送 ACTION_SHUTDOWN 广播
+  → HeyboardToolService 中动态注册的 ShutdownReceiver 接收广播
+  → 读取 sys.shutdown.requested 系统属性区分关机/重启
+    → "0" = 关机 → 执行 on_close 场景动作
+    → "1" = 重启 → 跳过，不执行
   → AutomationExecutor.executeOnClose()
   → 从 SharedPreferences 读取 trigger="on_close" 的场景
   → SerialCommandExecutor 发送串口指令
@@ -128,7 +131,7 @@ app/src/main/
 | `android:persistent="true"` | 进程常驻，开机自动拉起 |
 | `android:process=":tool"` | Service 独立进程，与 Activity 生命周期解耦 |
 | H3C `service.json` 白名单 | 防止一键下课/一键清理杀掉服务，防止 stopped=true |
-| 动态注册 FinishClassReceiver | Android 14 静态注册收不到隐式广播，改为在 Service 中动态注册 |
+| 动态注册 ShutdownReceiver | 监听 ACTION_SHUTDOWN 广播，通过 `sys.shutdown.requested` 区分关机（"0"）和重启（"1"），仅关机时执行 on_close |
 | `MODE_MULTI_PROCESS` | Activity (主进程) 和 Service (:tool 进程) 间 SharedPreferences 数据同步 |
 | 开机时间戳守卫 | on_start 每次开机只执行一次（5秒容差） |
 | `AtomicBoolean` | 防止 on_close 重复执行 |
@@ -141,12 +144,20 @@ app/src/main/
 - **`service.json`**: 添加 `com.heyboard.teachingassistant/.automation.HeyboardToolService`，防止 `forceStopPackage` 杀掉服务
 - **`startApp.json`**: 不需要添加包名（该文件用于 launcher 拉起 Activity 前台界面，我们通过 persistent + BOOT_COMPLETED 实现纯后台自启动）
 
-#### H3C 一键下课广播
+#### 关机/重启区分机制
+- 关机和重启都会触发 `ACTION_SHUTDOWN` 广播，广播本身不区分
+- 通过反射读取 `sys.shutdown.requested` 系统属性来区分：
+  - `"0"` = 用户关机 → 执行 on_close 场景动作
+  - `"1"` = 用户重启 → 跳过
+  - 包含 `"reboot"` = 其他重启变体 → 跳过
+
+#### H3C 一键下课
 - 从 H3C Launcher APK (`/system/priv-app/h3clauncher/h3clauncher.apk`) 反编译发现的 Action：
   - `com.h3c.action.FINISH_CLASS` — 下课触发（在 forceStopPackage 之前发送）
   - `com.h3c.action.FINISH_CLASS_DONE` — 下课完成（在 forceStopPackage 之后发送）
 - 广播从 `com.h3c.system.control.BaseControlCompat.notifyFinishClassActionDone()` 发出
 - 新版 h3clauncher 已将我们的包名加入白名单，forceStopPackage 会跳过
+- 一键下课不再触发 on_close 场景动作（v1.0.9 起改为仅响应系统关机广播）
 
 #### RS232 接线方案
 - **MegaBook(USB) → CH340 直通线 → 串口分配器 → 交叉线 → 交互平板 RS232 口**
@@ -181,6 +192,7 @@ app/src/main/
 | 悬浮窗拖动时灵时不灵 | 拖动只绑定在 TextView 上 | 改为整个 floatingView 监听触摸 |
 | Debug/Release APK 安装冲突 | 签名不一致 | 统一用 release 签名测试 |
 | Android 14+ 隐式广播不可达 | 静态注册的 BroadcastReceiver 收不到隐式广播 | 改为在 Service 中动态注册 receiver |
+| 重启时误触发 on_close | 关机和重启都发送 ACTION_SHUTDOWN 广播 | 读取 `sys.shutdown.requested` 属性区分：`"0"`=关机，`"1"`=重启 |
 | USB 权限 PendingIntent 崩溃 | Android 14 禁止隐式 Intent + FLAG_MUTABLE | 改为显式 Intent（setPackage）+ FLAG_MUTABLE |
 | Toast 在 H3C 设备不显示 | H3C 系统屏蔽 Toast 通知 | 改用 AlertDialog 显示结果 |
 | 串口指令发出但设备无反应 | USB 转 DB9 直通线 TX/RX 未交叉 | DTE↔DTE 需使用交叉线（Null Modem） |
@@ -239,6 +251,7 @@ MegaBook(USB) → CH340直通线 → 串口分配器(1入4出) → 交叉线×4 
 | 1.0.6 | 2026-03-17 | 修复 USB 权限崩溃、Toast 不显示；自动化图标改为扳手 |
 | 1.0.7 | 2026-03-18 | 自动化触发重构：HeyboardToolService 前台服务 + 开机自启动 + H3C 一键下课广播触发 |
 | 1.0.8 | 2026-03-19 | 系统平台签名（USB 免授权）、persistent 进程常驻、:tool 独立进程、H3C 白名单集成、动态注册 FinishClassReceiver、跨进程 SharedPreferences 同步 |
+| 1.0.9 | 2026-03-20 | "系统关闭时"触发改为监听 ACTION_SHUTDOWN 广播，通过 sys.shutdown.requested 区分关机/重启，仅关机时执行 on_close；移除 FinishClassReceiver |
 
 ---
 
